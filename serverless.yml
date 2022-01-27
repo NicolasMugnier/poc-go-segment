@@ -1,0 +1,37 @@
+service: async-poc-go
+frameworkVersion: '2'
+
+plugins:
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  region: eu-west-1
+  runtime: go1.x
+  lambdaHashingVersion: 20201221
+
+package:
+  patterns:
+    - '!./**'
+    - ./bin/**
+
+functions:
+  segmentEvent:
+    handler: bin/segment
+    reservedConcurrency: 10
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - SegmentSQS
+              - Arn
+          #batchSize: 10
+          #enabled: true
+
+resources:
+  Resources:
+    SegmentSQS:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: Segment
+
